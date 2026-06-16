@@ -1,0 +1,40 @@
+name: Build Patched Frida Server
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential ninja-build gcc-multilib
+
+      - name: Patch frida strings
+        run: |
+          find . -type f -name "*.c" -o -name "*.cpp" -o -name "*.h" | xargs grep -l "frida" | head -20
+          sed -i 's/frida-server/svc_daemon/g' frida/frida-core/server/server.vala 2>/dev/null || true
+          sed -i 's/FRIDA/SDAEMON/g' frida/frida-core/lib/agent/agent.vala 2>/dev/null || true
+
+      - name: Build frida-server android arm64
+        run: |
+          pip install colorama
+          python releng/build.py frida-server --host=android-arm64
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: frida-server-patched-arm64
+          path: build/frida-android-arm64/bin/frida-server
