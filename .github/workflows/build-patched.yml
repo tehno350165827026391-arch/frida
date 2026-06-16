@@ -34,7 +34,7 @@ jobs:
           python releng/build.py frida-server --host=android-arm64
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: frida-server-patched-arm64
           path: build/frida-android-arm64/bin/frida-server
